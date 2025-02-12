@@ -10,9 +10,9 @@ public class Task implements Comparable<Task> {
 	private List<String> dependencies;
 
 	public Task(String taskId, int priority, List<String> dependencies) {
-		this.taskId = taskId;
-		this.priority = priority;
-		this.dependencies = dependencies;
+		this.taskId = Objects.requireNonNull(taskId, "Task ID cannot be null");
+		this.priority = Objects.requireNonNull(priority, "Task priority cannot be null");
+		this.dependencies = Objects.requireNonNull(dependencies, "Task dependencies cannot be null");
 	}
 
 	@Override

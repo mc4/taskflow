@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 public class TaskQueue {
@@ -16,9 +18,9 @@ public class TaskQueue {
 	private final Map<String, Node> nodes = new HashMap<>();
 
 	public void addTask(String taskId, int priority, List<String> dependencies) {
-		for (String dep : dependencies) {
-			if (!taskMap.containsKey(dep)) {
-				throw new IllegalArgumentException("Dependency " + dep + " does not exist");
+		for (String dependency : dependencies) {
+			if (!taskMap.containsKey(dependency)) {
+				throw new IllegalArgumentException("Dependency " + dependency + " does not exist");
 			}
 		}
 		Task task = new Task(taskId, priority, dependencies);
@@ -45,19 +47,39 @@ public class TaskQueue {
 	}
 
 	public void removeTask(String taskId) {
-
+	    Objects.requireNonNull(taskId, "Task ID cannot be null");
+		taskMap.remove(taskId);
+		dependencyGraph.remove(taskId);
+		taskQueue.removeIf(task -> task.getTaskId().equals(taskId));
 	}
 
 	public void updateTask(String taskId, int priority, List<String> dependencies) {
-
+		removeTask(taskId);
+		addTask(taskId, priority, dependencies);
 	}
 
 	public void assignTasksToNodes() {
+		if (nodes.isEmpty()) {
+			return;
+		}
 
+		List<Node> nodeList = new ArrayList<>(nodes.values());
+		int index = 0;
+
+		for (Task task : taskQueue) {
+			nodeList.get(index).assignTask(task);
+			index = (index + 1) % nodeList.size();
+		}
 	}
 
 	public void handleNodeFailure(String nodeId) {
-
+		if (nodes.containsKey(nodeId)) {
+			Queue<Task> failedTasks = nodes.get(nodeId).getAssignedTasks();
+			while (!failedTasks.isEmpty()) {
+				taskQueue.offer(failedTasks.poll());
+			}
+			nodes.remove(nodeId);
+		}
 	}
 
 	public void registerNode(String nodeId) {
@@ -67,4 +89,5 @@ public class TaskQueue {
 	public boolean isNodeRegistered(String nodeId) {
 		return nodes.containsKey(nodeId);
 	}
+
 }
