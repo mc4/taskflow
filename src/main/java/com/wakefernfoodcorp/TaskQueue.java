@@ -77,7 +77,7 @@ public class TaskQueue {
 	}
 
 	public void removeTask(String taskId) {
-		Objects.requireNonNull(taskId, "Task ID cannot be null");
+		Objects.requireNonNull(taskId, "Task Id cannot be null");
 		taskMap.remove(taskId);
 		dependencyGraph.remove(taskId);
 		taskQueue.removeIf(task -> task.getTaskId().equals(taskId));
@@ -112,7 +112,7 @@ public class TaskQueue {
 	}
 
 	public void registerNode(String nodeId) {
-		Objects.requireNonNull(nodeId, "Node ID cannot be null");
+		Objects.requireNonNull(nodeId, "Node Id cannot be null");
 		nodes.put(nodeId, new Node(nodeId));
 	}
 

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,7 +16,7 @@ class TaskQueueTest {
 	private TaskQueue taskQueue;
 
 	@BeforeEach
-	void setUp() {
+	public void setUp() {
 		taskQueue = new TaskQueue();
 	}
 
@@ -29,7 +28,7 @@ class TaskQueueTest {
 	}
 
 	@Test
-	void testAddTaskWithDependencies() {
+	public void testAddTaskWithDependencies() {
 		taskQueue.addTask("A", 1, Collections.emptyList());
 		taskQueue.addTask("B", 1, Collections.singletonList("A"));
 
@@ -46,7 +45,7 @@ class TaskQueueTest {
 
 	// Test task execution order based on priority
 	@Test
-	void testTaskPriority() {
+	public void testTaskPriority() {
 		taskQueue.addTask("A", 2, Collections.emptyList());
 		taskQueue.addTask("B", 1, Collections.emptyList());
 		List<String> order = taskQueue.getExecutionOrder();
@@ -64,7 +63,7 @@ class TaskQueueTest {
 	}
 
 	@Test
-	void testExecutionOrderWithMultipleDependencies() {
+	public void testExecutionOrderWithMultipleDependencies() {
 		taskQueue.addTask("A", 1, Collections.emptyList());
 		taskQueue.addTask("B", 2, Collections.singletonList("A"));
 		taskQueue.addTask("C", 3, List.of("A", "B"));
@@ -152,7 +151,7 @@ class TaskQueueTest {
 	}
 
 	@Test
-	void testMissingDependencyShouldThrowException() {
+	public void testMissingDependencyShouldThrowException() {
 		taskQueue.addTask("A", 3, Collections.emptyList());
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
