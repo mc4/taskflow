@@ -158,7 +158,7 @@ class TaskQueueTest {
 			taskQueue.addTask("B", 2, List.of("A", "X"));
 		});
 
-		assertEquals("Dependency X does not exist", exception.getMessage());
+		assertEquals("One or more dependencies do not exist", exception.getMessage());
 	}
 
 }

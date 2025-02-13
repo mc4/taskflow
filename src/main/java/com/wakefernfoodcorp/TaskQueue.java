@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.stream.Collectors;
@@ -17,10 +18,8 @@ public class TaskQueue {
 	private final Map<String, Node> nodes = new HashMap<>();
 
 	public void addTask(String taskId, int priority, List<String> dependencies) {
-		for (String dependency : dependencies) {
-			if (!taskMap.containsKey(dependency)) {
-				throw new IllegalArgumentException("Dependency " + dependency + " does not exist");
-			}
+		if (dependencies.stream().anyMatch(dep -> !taskMap.containsKey(dep))) {
+			throw new IllegalArgumentException("One or more dependencies do not exist");
 		}
 		Task task = new Task(taskId, priority, dependencies);
 		taskMap.put(taskId, task);
@@ -77,10 +76,10 @@ public class TaskQueue {
 	}
 
 	public void removeTask(String taskId) {
-		Objects.requireNonNull(taskId, "Task Id cannot be null");
+		Optional.ofNullable(taskId).orElseThrow(() -> new IllegalArgumentException("Task Id cannot be null"));
 		taskMap.remove(taskId);
 		dependencyGraph.remove(taskId);
-		taskQueue.removeIf(task -> task.getTaskId().equals(taskId));
+		taskQueue.removeIf(task -> Objects.equals(task.getTaskId(), taskId));
 	}
 
 	public void updateTask(String taskId, int priority, List<String> dependencies) {
@@ -112,7 +111,7 @@ public class TaskQueue {
 	}
 
 	public void registerNode(String nodeId) {
-		Objects.requireNonNull(nodeId, "Node Id cannot be null");
+		Optional.ofNullable(nodeId).orElseThrow(() -> new IllegalArgumentException("Node Id cannot be null"));
 		nodes.put(nodeId, new Node(nodeId));
 	}
 
