@@ -2,13 +2,12 @@ package com.wakefernfoodcorp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TaskQueue {
 
@@ -31,23 +30,54 @@ public class TaskQueue {
 
 	public List<String> getExecutionOrder() {
 		List<String> executionOrder = new ArrayList<>();
-		Set<String> executedTasks = new HashSet<>();
-		PriorityQueue<Task> readyQueue = new PriorityQueue<>(taskQueue);
+		Map<String, Integer> inDegree = new HashMap<>();
+		PriorityQueue<Task> readyQueue = new PriorityQueue<>(); // uses Task class's natural order(based on task priority)
+		Map<String, List<String>> dependencyMap = new HashMap<>();
 
-		while (!readyQueue.isEmpty()) {
-			Task task = readyQueue.poll();
-			if (executedTasks.containsAll(task.getDependencies())) {
-				executionOrder.add(task.getTaskId());
-				executedTasks.add(task.getTaskId());
-			} else {
+		// Initialize in-degree map and build the dependency graph
+		for (Task task : taskQueue) {
+			inDegree.put(task.getTaskId(), task.getDependencies().size());
+			for (String dep : task.getDependencies()) {
+				// Ensure dependencies exist before proceeding
+				if (!taskMap.containsKey(dep)) {
+					throw new IllegalStateException("Task " + task.getTaskId() + " depends on missing task " + dep);
+				}
+				dependencyMap.computeIfAbsent(dep, k -> new ArrayList<>()).add(task.getTaskId());
+			}
+		}
+
+		// Add tasks with no dependencies to the ready queue
+		for (Task task : taskQueue) {
+			if (inDegree.get(task.getTaskId()) == 0) {
 				readyQueue.add(task);
 			}
 		}
+
+		while (!readyQueue.isEmpty()) {
+			Task task = readyQueue.poll();
+			executionOrder.add(task.getTaskId());
+
+			// Reduce dependency count for dependent tasks and add them if they are ready
+			if (dependencyMap.containsKey(task.getTaskId())) {
+				for (String dependentTaskId : dependencyMap.get(task.getTaskId())) {
+					inDegree.put(dependentTaskId, inDegree.get(dependentTaskId) - 1);
+					if (inDegree.get(dependentTaskId) == 0) {
+						readyQueue.add(taskMap.get(dependentTaskId));
+					}
+				}
+			}
+		}
+
+		// Check for missing tasks or circular dependencies
+		if (executionOrder.size() != taskQueue.size()) {
+			throw new IllegalStateException("Circular dependency detected or some tasks are missing.");
+		}
+
 		return executionOrder;
 	}
 
 	public void removeTask(String taskId) {
-	    Objects.requireNonNull(taskId, "Task ID cannot be null");
+		Objects.requireNonNull(taskId, "Task ID cannot be null");
 		taskMap.remove(taskId);
 		dependencyGraph.remove(taskId);
 		taskQueue.removeIf(task -> task.getTaskId().equals(taskId));
@@ -65,7 +95,6 @@ public class TaskQueue {
 
 		List<Node> nodeList = new ArrayList<>(nodes.values());
 		int index = 0;
-
 		for (Task task : taskQueue) {
 			nodeList.get(index).assignTask(task);
 			index = (index + 1) % nodeList.size();
@@ -83,11 +112,16 @@ public class TaskQueue {
 	}
 
 	public void registerNode(String nodeId) {
+		Objects.requireNonNull(nodeId, "Node ID cannot be null");
 		nodes.put(nodeId, new Node(nodeId));
 	}
 
 	public boolean isNodeRegistered(String nodeId) {
-		return nodes.containsKey(nodeId);
+		return nodeId != null ? nodes.containsKey(nodeId) : false;
+	}
+
+	public List<String> getAvailableNodeIds() {
+		return nodes.keySet().stream().collect(Collectors.toList());
 	}
 
 }
