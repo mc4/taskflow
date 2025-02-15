@@ -30,14 +30,12 @@ public class TaskQueue {
 	public List<String> getExecutionOrder() {
 		List<String> executionOrder = new ArrayList<>();
 		Map<String, Integer> inDegree = new HashMap<>();
-		PriorityQueue<Task> readyQueue = new PriorityQueue<>(); // uses Task class's natural order(based on task priority)
+		PriorityQueue<Task> readyQueue = new PriorityQueue<>();
 		Map<String, List<String>> dependencyMap = new HashMap<>();
 
-		// Initialize in-degree map and build the dependency graph
 		for (Task task : taskQueue) {
 			inDegree.put(task.getTaskId(), task.getDependencies().size());
 			for (String dep : task.getDependencies()) {
-				// Ensure dependencies exist before proceeding
 				if (!taskMap.containsKey(dep)) {
 					throw new IllegalStateException("Task " + task.getTaskId() + " depends on missing task " + dep);
 				}
@@ -45,7 +43,6 @@ public class TaskQueue {
 			}
 		}
 
-		// Add tasks with no dependencies to the ready queue
 		for (Task task : taskQueue) {
 			if (inDegree.get(task.getTaskId()) == 0) {
 				readyQueue.add(task);
@@ -56,7 +53,6 @@ public class TaskQueue {
 			Task task = readyQueue.poll();
 			executionOrder.add(task.getTaskId());
 
-			// Reduce dependency count for dependent tasks and add them if they are ready
 			if (dependencyMap.containsKey(task.getTaskId())) {
 				for (String dependentTaskId : dependencyMap.get(task.getTaskId())) {
 					inDegree.put(dependentTaskId, inDegree.get(dependentTaskId) - 1);
@@ -67,7 +63,6 @@ public class TaskQueue {
 			}
 		}
 
-		// Check for missing tasks or circular dependencies
 		if (executionOrder.size() != taskQueue.size()) {
 			throw new IllegalStateException("Circular dependency detected or some tasks are missing.");
 		}
